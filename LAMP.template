@@ -226,12 +226,12 @@
             "packages" : {
               "yum" : {
                 "mysql"        : [],
-                "mysql-server" : [],
+                "mysql57-server" : [],
                 "mysql-libs"   : [],
-                "httpd"        : [],
-                "php"          : [],
-                "php-mysql"    : [],
-                "git"          : []
+                "httpd24"        : [],
+                "php72"          : [],
+                "php72-mysqlnd"    : [],
+                "git"    : []
               }
             },
 
@@ -301,6 +301,31 @@
                 "group" : "apache"
               },
 
+              "/home/ec2-user/my.sh" : {
+                "content" : { "Fn::Join" : ["", [
+
+                  "sudo yum update -y\n",
+                  "sudo yum install -y httpd24 php72 mysql57-server php72-mysqlnd\n",
+                  "sudo service httpd start\n",
+                  "sudo chkconfig httpd on\n",
+                  "chkconfig --list httpd\n",
+                  "ls -l /var/www\n",
+                  "sudo usermod -a -G apache ec2-user\n",
+                  "groups\n",
+                  "sudo chown -R ec2-user:apache /var/www\n",
+                  "sudo chmod 2775 /var/www\n",
+                  "find /var/www -type d -exec sudo chmod 2775 {} \\;\n",
+                  "find /var/www -type f -exec sudo chmod 0664 {} \\;\n",
+                  "cd /var/www/html/\n",
+                  "git clone https://github.com/banago/simple-php-website.git\n",
+                  "cd simple-php-website* \n",
+                  "php -S localhost:8080\n",
+                  ]]},
+                "mode"  : "000777",
+                "owner" : "root",
+                "group" : "root"
+              },
+
               "/tmp/setup.mysql" : {
                 "content" : { "Fn::Join" : ["", [
                   "CREATE DATABASE ", { "Ref" : "DBName" }, ";\n",
@@ -336,18 +361,6 @@
                 "mode"    : "000400",
                 "owner"   : "root",
                 "group"   : "root"
-              }, 
-
-
-              "/home/ec2-user/my.sh" : {
-                "content" : { "Fn::Join" : ["", [
-                  "git clone https://github.com/banago/simple-php-website.git\n",
-                  "cd simple-php-website-master \n",
-                  "php -S localhost:8080\n",
-                  ]]},
-                "mode"  : "000777",
-                "owner" : "root",
-                "group" : "root"
               }
             },
 
@@ -383,7 +396,6 @@
         "KeyName"        : { "Ref" : "KeyName" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
              "#!/bin/bash -xe\n",
-             "yum update -y \n",
              "yum update -y aws-cfn-bootstrap\n",
 
              "# Install the files and packages from the metadata\n",
@@ -412,7 +424,7 @@
       "Properties" : {
         "GroupDescription" : "Enable HTTP access via port 80",
         "SecurityGroupIngress" : [
-          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", " " : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
           {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "SSHLocation"}}
         ]
       }      
